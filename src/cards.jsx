@@ -163,3 +163,45 @@ export const RowItem = ({ iss, st, onOpen, onRead, showTL, index = 0 }) => {
     </div>
   );
 };
+
+// ---- VOLUME CARD ----
+export const VolumeCard = ({ series, coverIssue, count, onClick, index = 0 }) => {
+  const [hover, setHover] = React.useState(false);
+  
+  const volParts = series.vol.split('·');
+  const volName = volParts[0].trim();
+  const yearText = volParts.length > 1 ? `(${volParts[1].trim()})` : "";
+
+  return (
+    <div className="fade-up" style={{ animationDelay: `${Math.min(index, 16) * 24}ms`, textAlign: "center" }}
+      onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
+      <button onClick={onClick} style={{
+        position: "relative", width: "100%", aspectRatio: "2 / 3", borderRadius: 6, overflow: "hidden",
+        background: "var(--ink-3)", display: "block",
+        border: `1px solid ${hover ? "var(--line-2)" : "var(--line)"}`,
+        boxShadow: hover ? "var(--shadow), var(--shadow-red)" : "0 8px 24px -10px rgba(0,0,0,.7)",
+        transform: hover ? "translateY(-5px)" : "none", transition: "all .28s cubic-bezier(.2,.7,.2,1)",
+      }}>
+        <CoverImg iss={coverIssue} style={{ filter: hover ? "none" : "saturate(.92) brightness(.93)", transition: "filter .3s" }} />
+        {/* hover scrim */}
+        <div style={{
+          position: "absolute", inset: 0,
+          background: hover ? "rgba(255,255,255,.05)" : "transparent", transition: "background .28s"
+        }} />
+      </button>
+      
+      {/* Title & Metadata */}
+      <div style={{ marginTop: 14 }}>
+        <div style={{ fontFamily: "var(--head)", fontWeight: 700, fontSize: 16, color: hover ? "var(--red)" : "var(--paper)", transition: "color .2s" }}>
+          {series.name} {volName}
+        </div>
+        <div style={{ fontSize: 14, color: "var(--muted-2)", marginTop: 4 }}>
+          {yearText}
+        </div>
+        <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 4 }}>
+          {count} issues
+        </div>
+      </div>
+    </div>
+  );
+};

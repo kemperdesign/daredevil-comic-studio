@@ -1,19 +1,14 @@
 import { DDR_ISSUES, DDR_UPCOMING, DDR_SERIES } from './data';
-import { CoverCard } from './cards';
+import { VolumeCard } from './cards';
 
 export const IndexView = ({ helpers }) => {
-  // Combine issues and owned upcoming issues
+  // Combine issues
   const allComics = [
     ...DDR_ISSUES,
     ...DDR_UPCOMING.filter((iss) => helpers.isOwned(iss)),
-  ].sort((a, b) => {
-    // Sort by publication date
-    const dateA = new Date(a.date).getTime();
-    const dateB = new Date(b.date).getTime();
-    return dateA - dateB;
-  });
+  ];
 
-  // Group by series for sections
+  // Group by series
   const grouped = {};
   allComics.forEach((iss) => {
     const series = DDR_SERIES[iss.s];
@@ -23,10 +18,10 @@ export const IndexView = ({ helpers }) => {
     grouped[iss.s].issues.push(iss);
   });
 
-  const seriesOrder = ['mwf', 'yellow', 'v1', 'born', 'v2', 'v3', 'v5', 'v6', 'v7', 'v8'];
+  const seriesOrder = ['v1', 'v2', 'v3', 'v5', 'v6', 'v7', 'v8', 'mwf', 'yellow', 'born'];
   const seriesList = seriesOrder
     .filter((k) => grouped[k])
-    .map((k) => grouped[k]);
+    .map((k) => ({ key: k, ...grouped[k] }));
 
   return (
     <div style={{ flex: 1 }}>
@@ -50,47 +45,35 @@ export const IndexView = ({ helpers }) => {
             color: 'var(--muted)',
             maxWidth: 600,
           }}>
-            A comprehensive collection spanning decades of Hell's Kitchen. From origin stories to modern sagas, every issue of the Man Without Fear.
+            A comprehensive collection spanning decades of Hell's Kitchen. Choose a volume below to view its issues.
           </p>
         </div>
       </section>
 
-      {/* Grid sections by series */}
-      {seriesList.map((group) => (
-        <section key={group.series.short} style={{ marginBottom: 80 }}>
-          <div className="wrap">
-            <div style={{ marginBottom: 28 }}>
-              <h2 className="display" style={{
-                fontSize: 28,
-                color: 'var(--paper)',
-                marginBottom: 4,
-              }}>
-                {group.series.name}
-              </h2>
-              <div style={{ fontSize: 13, color: 'var(--muted-2)', fontFamily: 'var(--head)', letterSpacing: '.05em', textTransform: 'uppercase' }}>
-                {group.series.vol} · {group.issues.length} issue{group.issues.length !== 1 ? 's' : ''}
-              </div>
-            </div>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
-              gap: 24,
-              marginBottom: 12,
-            }}>
-              {group.issues.map((iss, idx) => (
-                <CoverCard
-                  key={iss.id}
-                  iss={iss}
-                  st={helpers.getSt(iss)}
-                  onOpen={helpers.onOpen}
-                  onRead={helpers.onRead}
-                  index={idx}
-                />
-              ))}
-            </div>
+      {/* Grid of Volumes */}
+      <section style={{ marginBottom: 80 }}>
+        <div className="wrap">
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+            gap: 32,
+          }}>
+            {seriesList.map((group, idx) => (
+              <VolumeCard
+                key={group.key}
+                series={group.series}
+                coverIssue={group.issues[0]}
+                count={group.issues.length}
+                onClick={() => {
+                  helpers.setRoute({ name: 'volume', seriesId: group.key });
+                  window.scrollTo(0, 0);
+                }}
+                index={idx}
+              />
+            ))}
           </div>
-        </section>
-      ))}
+        </div>
+      </section>
     </div>
   );
 };

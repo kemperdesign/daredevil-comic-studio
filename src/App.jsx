@@ -10,6 +10,7 @@ import { IssueDetail } from './detail';
 import { LinksView } from './links';
 import { ChecklistView } from './checklist';
 import { Reader } from './reader';
+import { VolumeView } from './volume-view';
 import { savePdf, saveCover } from './storage';
 import { generatePdfThumbnail } from './pdfutils';
 
@@ -132,6 +133,7 @@ function App() {
       <TopNav route={route} setRoute={setRoute} helpers={helpers} newCount={newCount} />
       <main style={{ flex: 1 }}>
         {route.name === "index" && <IndexView state={state} helpers={helpers} />}
+        {route.name === "volume" && <VolumeView seriesId={route.seriesId} helpers={helpers} />}
         {route.name === "library" && <Library key="lib" state={state} helpers={helpers} />}
         {route.name === "timeline" && <TimelineArrange state={state} helpers={helpers} />}
         {route.name === "releases" && <Releases state={state} helpers={helpers} />}
