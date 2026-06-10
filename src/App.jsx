@@ -120,6 +120,8 @@ function App() {
       }));
       flash(`PDF saved to your library`);
     },
+    getSt,
+    setRoute,
   };
 
   // releases "new" count for the nav badge
