@@ -1,5 +1,5 @@
 import React from 'react';
-import { DDR_SERIES, DDR_ARCS, DDR_ISSUES, DDR_byTL, DDR_ext } from './data';
+import { DDR_SERIES, DDR_ARCS, DDR_ISSUES, DDR_byTL, DDR_byPub, DDR_ext } from './data';
 import { Icon, Badge, fmtDate, fmtDateLong } from './components';
 import { CoverImg } from './cards';
 import { savePdf, saveCover } from './storage';
@@ -44,6 +44,12 @@ export const IssueDetail = ({ iss, state, helpers }) => {
   const tlAll = DDR_byTL(state.tlOrder);
   const tlIndex = tlAll.findIndex((x) => x.id === iss.id);
   const prevTL = tlAll[tlIndex - 1], nextTL = tlAll[tlIndex + 1];
+
+  // Publication order navigation
+  const pubAll = DDR_byPub();
+  const pubIndex = pubAll.findIndex((x) => x.id === iss.id);
+  const prevPub = pubIndex > 0 ? pubAll[pubIndex - 1] : null;
+  const nextPub = pubIndex < pubAll.length - 1 ? pubAll[pubIndex + 1] : null;
 
   return (
     <div style={{ paddingBottom: 80 }}>
@@ -99,7 +105,7 @@ export const IssueDetail = ({ iss, state, helpers }) => {
                 }}><Icon name="play" size={18} /> {inProgress ? "Resume reading" : "Read now"}</button>
                 <ActionBtn active={st.fav} onClick={() => helpers.toggle(iss, "fav")} icon="star" label={st.fav ? "Favorited" : "Favorite"} tone="gold" />
                 <ActionBtn active={st.read} onClick={() => helpers.toggle(iss, "read")} icon="check" label={st.read ? "Read" : "Mark read"} tone="green" />
-                
+
                 {/* Upload Button */}
                 <label style={{
                   display: "inline-flex", alignItems: "center", gap: 9, padding: "14px 20px", borderRadius: 6,
@@ -111,6 +117,28 @@ export const IssueDetail = ({ iss, state, helpers }) => {
                   <input type="file" accept="application/pdf" style={{ display: "none" }} onChange={handleUpload} />
                   <Icon name={hasLocal ? "check" : "plus"} size={16} /> {hasLocal ? "PDF Saved" : "Upload PDF"}
                 </label>
+              </div>
+
+              {/* navigation */}
+              <div style={{ display: "flex", gap: 12, marginTop: 28 }}>
+                {prevPub ? (
+                  <button onClick={() => helpers.onOpen(prevPub)} style={{
+                    display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 18px", background: "var(--ink-3)", border: "1px solid var(--line)",
+                    borderRadius: 6, color: "var(--paper)", fontFamily: "var(--head)", fontWeight: 600, fontSize: 12, letterSpacing: ".05em", textTransform: "uppercase",
+                    transition: "all .2s"
+                  }} onMouseEnter={(e) => { e.currentTarget.style.background = "var(--ink-4)"; e.currentTarget.style.borderColor = "var(--line-2)"; }} onMouseLeave={(e) => { e.currentTarget.style.background = "var(--ink-3)"; e.currentTarget.style.borderColor = "var(--line)"; }}>
+                    <Icon name="chevL" size={16} /> Previous
+                  </button>
+                ) : <div />}
+                {nextPub ? (
+                  <button onClick={() => helpers.onOpen(nextPub)} style={{
+                    display: "inline-flex", alignItems: "center", gap: 8, padding: "12px 18px", background: "var(--red)", border: "1px solid var(--red-deep)",
+                    borderRadius: 6, color: "#fff", fontFamily: "var(--head)", fontWeight: 600, fontSize: 12, letterSpacing: ".05em", textTransform: "uppercase",
+                    boxShadow: "0 6px 16px -8px var(--red-glow)", transition: "all .2s"
+                  }} onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-2px)"} onMouseLeave={(e) => e.currentTarget.style.transform = "none"}>
+                    Next <Icon name="chevR" size={16} />
+                  </button>
+                ) : null}
               </div>
             </div>
           </div>
