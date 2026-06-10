@@ -16,7 +16,10 @@ export const CoverImg = ({ iss, style, className }) => {
 
   React.useEffect(() => {
     let mounted = true;
-    if (!coverCache[iss.id]) {
+    if (iss.coverUrl) {
+      coverCache[iss.id] = iss.coverUrl;
+      setSrc(iss.coverUrl);
+    } else if (!coverCache[iss.id]) {
       setSrc(coverFor(iss));
     }
     
