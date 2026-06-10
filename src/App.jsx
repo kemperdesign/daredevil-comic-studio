@@ -186,8 +186,23 @@ const ImportModal = ({ onClose, helpers, state }) => {
     if (f) {
       setFile(f);
       setStage("select");
-      const numMatch = f.name.match(/\d+/);
-      const guess = numMatch ? DDR_ISSUES.find(i => i.no == numMatch[0]) : null;
+      const name = f.name.toLowerCase();
+      let vol = null;
+      if (name.includes("v6") || name.includes("2019")) vol = "v6";
+      else if (name.includes("v7") || name.includes("2022")) vol = "v7";
+      else if (name.includes("v8") || name.includes("2023")) vol = "v8";
+      
+      const numMatch = name.match(/(?:#|issue\s*|-)\s*(\d+(\.\d+)?)/i) || name.match(/(\d+(\.\d+)?)/);
+      let guess = null;
+      if (numMatch) {
+         const no = numMatch[1];
+         const candidates = DDR_ISSUES.filter(i => String(i.no) === no);
+         if (candidates.length === 1) guess = candidates[0];
+         else if (candidates.length > 1) {
+            if (vol) guess = candidates.find(i => i.s === vol);
+            if (!guess) guess = candidates[0];
+         }
+      }
       if (guess) setIssueId(guess.id);
       else setIssueId(DDR_ISSUES[0].id);
     }

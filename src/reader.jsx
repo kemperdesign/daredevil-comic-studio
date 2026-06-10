@@ -37,6 +37,11 @@ export const Reader = ({ iss, state, helpers }) => {
   React.useEffect(() => {
     if (hasLocal) {
       getPdf(iss.id).then((blob) => setPdfFile(blob)).catch(console.error);
+    } else {
+      const url = `/comics/${iss.id}.pdf`;
+      fetch(url, { method: 'HEAD' }).then(res => {
+        if (res.ok) setPdfFile(url);
+      }).catch(() => {});
     }
   }, [hasLocal, iss.id]);
 
