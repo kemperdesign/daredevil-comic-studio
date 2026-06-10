@@ -19,7 +19,7 @@ export const IndexView = ({ helpers, state }) => {
     grouped[iss.s].issues.push(iss);
   });
 
-  const seriesOrder = ['v1', 'v2', 'v3', 'v5', 'v6', 'v7', 'v8', 'mwf', 'yellow', 'born'];
+  const seriesOrder = ['v1', 'v2', 'v3', 'v4', 'v5', 'v6', 'v7', 'v8', 'mwf', 'yellow', 'born'];
   const seriesList = seriesOrder
     .filter((k) => grouped[k])
     .map((k) => ({ key: k, ...grouped[k] }));
