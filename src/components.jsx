@@ -42,6 +42,7 @@ export const Icon = ({ name, size = 20, fill = "none", stroke = "currentColor", 
     mask: <path d="M12 3c5 0 8 2.5 8 7 0 4-3 8-8 11-5-3-8-7-8-11 0-4.5 3-7 8-7z M9 10c0 1 .8 2 1.6 2.4M15 10c0 1-.8 2-1.6 2.4" />,
     home: <path d="M4 11l8-7 8 7M6 10v9h12v-9" />,
     arrowR: <path d="M5 12h14M13 6l6 6-6 6" />,
+    link: <><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></>,
   }[name];
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke={stroke}

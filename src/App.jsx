@@ -7,6 +7,7 @@ import { TimelineArrange } from './timeline';
 import { Releases, bucketOf } from './releases';
 import { ScreenView } from './screen';
 import { IssueDetail } from './detail';
+import { LinksView } from './links';
 import { Reader } from './reader';
 import { savePdf, saveCover } from './storage';
 import { generatePdfThumbnail } from './pdfutils';
@@ -27,6 +28,7 @@ const NAV = [
   { key: "timeline", label: "Timeline", icon: "timeline" },
   { key: "releases", label: "Releases", icon: "book" },
   { key: "screen", label: "On Screen", icon: "play" },
+  { key: "links", label: "Links", icon: "link" },
 ];
 
 function App() {
@@ -133,6 +135,7 @@ function App() {
         {route.name === "releases" && <Releases state={state} helpers={helpers} />}
         {route.name === "screen" && <ScreenView state={state} helpers={helpers} />}
         {route.name === "detail" && <IssueDetail iss={route.iss} state={state} helpers={helpers} />}
+        {route.name === "links" && <LinksView />}
       </main>
       {reader && <Reader iss={reader} state={state} helpers={helpers} />}
       {importOpen && <ImportModal onClose={() => setImportOpen(false)} helpers={helpers} state={state} />}
