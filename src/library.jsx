@@ -118,14 +118,19 @@ export const Library = ({ state, helpers }) => {
   };
 
   const deletePdfFile = async (iss) => {
-    if (!window.confirm(`Remove PDF for ${iss.title}?`)) return;
+    const expected = iss.no.replace(/^#/, '');
+    const userInput = window.prompt(`To remove the PDF for ${iss.title}, type the issue number (${expected}):`);
+    if (userInput !== expected) {
+      if (userInput !== null && userInput.trim() !== "") {
+        alert("Issue number did not match. Deletion cancelled.");
+      }
+      return;
+    }
     try {
       await deletePdf(iss.id);
-      // Remove from localFiles state
-      setState(s => ({
-        ...s,
-        localFiles: (s.localFiles || []).filter(id => id !== iss.id)
-      }));
+      if (helpers.removeLocalFile) {
+        helpers.removeLocalFile(iss.id);
+      }
     } catch (e) {
       console.error('Delete failed:', e);
     }
