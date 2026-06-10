@@ -2,7 +2,6 @@ import React from 'react';
 import { DDR_SERIES, DDR_ARCS, DDR_ISSUES, DDR_byPub, DDR_byTL } from './data';
 import { Icon, DevilMark, Ring, Badge, fmtDate, fmtDateLong } from './components';
 import { CoverImg, CoverCard, RowItem } from './cards';
-import { NewForYou } from './releases';
 import { getPdf } from './storage';
 
 export const SORT = { PUB: "pub", TL: "tl" };
@@ -143,7 +142,6 @@ export const Library = ({ state, helpers }) => {
 
   return (
     <div className="wrap" style={{ paddingTop: 30, paddingBottom: 80 }}>
-      <NewForYou state={state} helpers={helpers} />
       <ContinueShelf items={continueItems} getSt={getSt} onOpen={onOpen} onRead={onRead} />
 
       {/* toolbar */}
