@@ -28,10 +28,10 @@ export const CoverImg = ({ iss, style, className }) => {
       if (custom) {
         coverCache[iss.id] = custom;
         setSrc(custom);
-      } else {
+      } else if (!iss.coverUrl) {
         const url = `/covers/${iss.id}.jpg`;
         fetch(url, {method: 'HEAD'}).then(res => {
-          if (res.ok && mounted) {
+          if (res.ok && mounted && res.headers.get('content-type')?.includes('image')) {
             coverCache[iss.id] = url;
             setSrc(url);
           }
