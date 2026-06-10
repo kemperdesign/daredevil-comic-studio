@@ -3,7 +3,7 @@ const STORE_NAME = 'pdfs';
 const COVERS_STORE = 'covers';
 const CHECK_STORE = 'checklist';
 
-function getDB() {
+export function getDB() {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open(DB_NAME, 3);
     req.onupgradeneeded = (e) => {

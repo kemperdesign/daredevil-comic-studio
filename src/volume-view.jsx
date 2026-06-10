@@ -3,9 +3,9 @@ import { DDR_ISSUES, DDR_UPCOMING, DDR_SERIES } from './data';
 import { CoverCard } from './cards';
 import { Icon } from './components';
 
-export const VolumeView = ({ seriesId, helpers }) => {
+export const VolumeView = ({ seriesId, helpers, state }) => {
   const series = DDR_SERIES[seriesId];
-  
+
   if (!series) {
     return <div style={{ padding: 40, textAlign: "center", color: "var(--muted)" }}>Volume not found.</div>;
   }
@@ -75,6 +75,7 @@ export const VolumeView = ({ seriesId, helpers }) => {
                 st={helpers.getSt(iss)}
                 onOpen={helpers.onOpen}
                 onRead={helpers.onRead}
+                hasUpload={state?.localFiles?.includes(iss.id)}
                 index={idx}
               />
             ))}

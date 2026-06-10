@@ -62,7 +62,7 @@ const flagStyle = (bg) => ({
 });
 
 // ---- GRID CARD ----
-export const CoverCard = ({ iss, st, onOpen, onRead, index = 0 }) => {
+export const CoverCard = ({ iss, st, onOpen, onRead, hasUpload = false, index = 0 }) => {
   const [hover, setHover] = React.useState(false);
   const series = DDR_SERIES[iss.s];
   const pct = st.pages ? Math.round((st.page || 0) / (iss.pages - 1) * 100) : 0;
@@ -70,45 +70,53 @@ export const CoverCard = ({ iss, st, onOpen, onRead, index = 0 }) => {
   return (
     <div className="fade-up" style={{ animationDelay: `${Math.min(index, 16) * 24}ms` }}
       onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
-      <button onClick={() => onOpen(iss)} style={{
-        position: "relative", width: "100%", aspectRatio: "2 / 3", borderRadius: 6, overflow: "hidden",
-        background: "var(--ink-3)", display: "block", textAlign: "left",
-        border: `1px solid ${hover ? "var(--line-2)" : "var(--line)"}`,
-        boxShadow: hover ? "var(--shadow), var(--shadow-red)" : "0 8px 24px -10px rgba(0,0,0,.7)",
-        transform: hover ? "translateY(-5px)" : "none", transition: "all .28s cubic-bezier(.2,.7,.2,1)",
-      }}>
-        <CoverFlags st={st} />
-        <CoverImg iss={iss} style={{ filter: hover ? "none" : "saturate(.92) brightness(.93)", transition: "filter .3s" }} />
-        {/* hover scrim + read button */}
-        <div style={{
-          position: "absolute", inset: 0, display: "grid", placeItems: "center",
-          background: "radial-gradient(120% 90% at 50% 60%, rgba(7,7,8,.72), rgba(7,7,8,.2))",
-          opacity: hover ? 1 : 0, transition: "opacity .28s",
+      <div style={{ position: "relative", width: "100%", aspectRatio: "2 / 3" }}>
+        <button onClick={() => onOpen(iss)} style={{
+          position: "absolute", inset: 0, borderRadius: 6, overflow: "hidden",
+          background: "var(--ink-3)", display: "block", textAlign: "left",
+          border: `1px solid ${hover ? "var(--line-2)" : "var(--line)"}`,
+          boxShadow: hover ? "var(--shadow), var(--shadow-red)" : "0 8px 24px -10px rgba(0,0,0,.7)",
+          transform: hover ? "translateY(-5px)" : "none", transition: "all .28s cubic-bezier(.2,.7,.2,1)",
         }}>
-          <span onClick={(e) => { e.stopPropagation(); onRead(iss); }} style={{
-            display: "inline-flex", alignItems: "center", gap: 8, padding: "11px 20px",
-            background: "var(--red)", color: "#fff", borderRadius: 4, fontFamily: "var(--head)",
-            fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", fontSize: 13,
-            boxShadow: "0 10px 30px -6px var(--red-glow)", transform: hover ? "scale(1)" : "scale(.9)",
-            transition: "transform .28s",
+          <CoverFlags st={st} />
+          <CoverImg iss={iss} style={{ filter: hover ? "none" : "saturate(.92) brightness(.93)", transition: "filter .3s" }} />
+          {/* hover scrim + read button */}
+          <div style={{
+            position: "absolute", inset: 0, display: "grid", placeItems: "center",
+            background: "radial-gradient(120% 90% at 50% 60%, rgba(7,7,8,.72), rgba(7,7,8,.2))",
+            opacity: hover ? 1 : 0, transition: "opacity .28s",
           }}>
-            <Icon name="play" size={15} /> {inProgress ? "Resume" : "Read"}
-          </span>
-        </div>
-        {/* progress bar */}
-        {inProgress && (
-          <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 4, background: "rgba(0,0,0,.5)" }}>
-            <div style={{ height: "100%", width: pct + "%", background: "var(--red)", boxShadow: "0 0 10px var(--red-glow)" }} />
+            <span onClick={(e) => { e.stopPropagation(); onRead(iss); }} style={{
+              display: "inline-flex", alignItems: "center", gap: 8, padding: "11px 20px",
+              background: "var(--red)", color: "#fff", borderRadius: 4, fontFamily: "var(--head)",
+              fontWeight: 600, letterSpacing: ".08em", textTransform: "uppercase", fontSize: 13,
+              boxShadow: "0 10px 30px -6px var(--red-glow)", transform: hover ? "scale(1)" : "scale(.9)",
+              transition: "transform .28s",
+            }}>
+              <Icon name="play" size={15} /> {inProgress ? "Resume" : "Read"}
+            </span>
           </div>
-        )}
-      </button>
+          {/* progress bar */}
+          {inProgress && (
+            <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 4, background: "rgba(0,0,0,.5)" }}>
+              <div style={{ height: "100%", width: pct + "%", background: "var(--red)", boxShadow: "0 0 10px var(--red-glow)" }} />
+            </div>
+          )}
+        </button>
+        {/* upload status indicator */}
+        <div style={{
+          position: "absolute", top: 6, right: 6, width: 20, height: 20, borderRadius: "50%",
+          background: hasUpload ? "var(--green)" : "#b81c26", zIndex: 10,
+          boxShadow: "0 3px 10px rgba(0,0,0,.8)", border: "2px solid rgba(255,255,255,.2)"
+        }} title={hasUpload ? "PDF uploaded" : "No PDF uploaded"} />
+      </div>
       {/* caption */}
       <div style={{ marginTop: 10, display: "flex", gap: 8, alignItems: "flex-start" }}>
         <div style={{ minWidth: 0, flex: 1 }}>
-          <div style={{ fontFamily: "var(--head)", fontWeight: 600, fontSize: 14, color: "var(--paper)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{iss.title}</div>
-          <div style={{ fontSize: 12, color: "var(--muted-2)", marginTop: 2, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-            {series.short} · {iss.no} · {fmtDate(iss.date)}
-          </div>
+          <div style={{ fontFamily: "var(--head)", fontWeight: 600, fontSize: 13, color: "var(--paper)", overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>{iss.title}</div>
+          {iss.releaseDate && <div style={{ fontSize: 11, color: "var(--muted-2)", marginTop: 3 }}>Release: {iss.releaseDate}</div>}
+          {iss.coverDate && <div style={{ fontSize: 11, color: "var(--muted-2)" }}>Cover: {iss.coverDate}</div>}
+          {!iss.releaseDate && <div style={{ fontSize: 11, color: "var(--muted-2)", marginTop: 3 }}>{series.short} · {iss.no}</div>}
         </div>
         {inProgress && <Ring value={pct / 100} size={26} sw={2.6}><span style={{ fontSize: 8, fontWeight: 700, color: "var(--red)" }}>{pct}</span></Ring>}
       </div>

@@ -52,8 +52,8 @@ export const IssueDetail = ({ iss, state, helpers }) => {
         <div style={{ position: "absolute", inset: 0, opacity: .22 }}><CoverImg iss={iss} style={{ objectPosition: "center 22%", filter: "blur(6px) saturate(1.1)" }} /></div>
         <div style={{ position: "absolute", inset: 0, background: "linear-gradient(0deg, var(--ink), rgba(7,7,8,.65) 55%, rgba(7,7,8,.85))" }} />
         <div className="wrap" style={{ position: "relative", paddingTop: 34, paddingBottom: 40 }}>
-          <button onClick={() => helpers.goLibrary()} style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "var(--muted)", fontFamily: "var(--head)", fontSize: 13, letterSpacing: ".06em", textTransform: "uppercase", marginBottom: 26 }}>
-            <Icon name="chevL" size={16} /> Back to collection
+          <button onClick={() => helpers.setRoute({ name: "volume", seriesId: iss.s })} style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "var(--muted)", fontFamily: "var(--head)", fontSize: 13, letterSpacing: ".06em", textTransform: "uppercase", marginBottom: 26 }}>
+            <Icon name="chevL" size={16} /> Back to volume
           </button>
           <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 44, alignItems: "start" }} className="detail-grid">
             {/* cover */}

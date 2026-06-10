@@ -54,9 +54,13 @@ export const Icon = ({ name, size = 20, fill = "none", stroke = "currentColor", 
 
 // ---------- devil-horns mask glyph (brand mark) ----------
 export const DevilMark = ({ size = 26, color = "var(--red)" }) => (
-  <svg width={size} height={size} viewBox="0 0 32 32" fill="none" style={{ display: "block" }}>
-    <path d="M6 4c2.4 1.2 4 3.4 4.6 6C12 9 14 8.4 16 8.4s4 .6 5.4 1.6C22 7.4 23.6 5.2 26 4c.6 4-.4 7-2.2 9.4 1.2 1.6 2 3.6 2 5.8 0 5-3.8 8.8-9.8 11.8C10 28 6.2 24.2 6.2 19.2c0-2.2.8-4.2 2-5.8C6.4 11 5.4 8 6 4z" fill={color} />
-    <path d="M11.4 16.2c1-.9 2.4-1.4 4.6-1.4s3.6.5 4.6 1.4c-.7 1.5-2.4 2.6-4.6 2.6s-3.9-1.1-4.6-2.6z" fill="#070708" />
+  <svg width={size} height={size} viewBox="0 0 100 100" fill="none" style={{ display: "block" }}>
+    {/* Outer circle border */}
+    <circle cx="50" cy="50" r="48" fill={color} stroke="#333" strokeWidth="2"/>
+    {/* Inner highlight/texture */}
+    <circle cx="50" cy="50" r="45" fill={color} opacity="0.95"/>
+    {/* DD text */}
+    <text x="50" y="62" fontSize="55" fontWeight="bold" fontFamily="Arial, sans-serif" fill="#999" textAnchor="middle" letterSpacing="-2">DD</text>
   </svg>
 );
 

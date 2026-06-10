@@ -38,7 +38,10 @@ export const IndexView = ({ helpers }) => {
             color: 'var(--paper)',
             marginBottom: 8,
           }}>
-            Daredevil Comics
+            <svg width="100%" height="auto" viewBox="0 0 800 120" preserveAspectRatio="xMinYMid meet" style={{ maxWidth: "700px", display: "block" }}>
+              <text x="10" y="90" fontSize="90" fontWeight="900" fontFamily="Arial, sans-serif" fill="#d41a2a" fontStyle="italic" letterSpacing="-2">DAREDEVIL</text>
+              <text x="30" y="115" fontSize="32" fontWeight="600" fontFamily="Arial, sans-serif" fill="var(--paper)" letterSpacing="3">COMICS</text>
+            </svg>
           </h1>
           <p style={{
             fontSize: 16,

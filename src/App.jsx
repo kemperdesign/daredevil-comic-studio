@@ -11,7 +11,7 @@ import { LinksView } from './links';
 import { ChecklistView } from './checklist';
 import { Reader } from './reader';
 import { VolumeView } from './volume-view';
-import { savePdf, saveCover } from './storage';
+import { savePdf, saveCover, getDB } from './storage';
 import { generatePdfThumbnail } from './pdfutils';
 
 // at startup, re-hydrate any owned upcoming issues into the library array
@@ -66,6 +66,32 @@ function App() {
 
   // hydrate owned-upcoming once
   React.useEffect(() => { hydrateOwned(state); /* eslint-disable-next-line */ }, []);
+
+  // scan IndexedDB for existing PDFs on mount
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const db = await getDB();
+        const tx = db.transaction('pdfs', 'readonly');
+        const store = tx.objectStore('pdfs');
+        const keysReq = store.getAllKeys();
+        keysReq.onsuccess = () => {
+          const existingPdfs = keysReq.result;
+          setState(s => {
+            const newLocalFiles = [...new Set([...(s.localFiles || []), ...existingPdfs])];
+            if (newLocalFiles.length > (s.localFiles || []).length) {
+              return { ...s, localFiles: newLocalFiles };
+            }
+            return s;
+          });
+        };
+      } catch (e) {
+        console.error('Failed to scan for existing PDFs:', e);
+      }
+    })();
+    /* eslint-disable-next-line */
+  }, []);
+
   // persist
   React.useEffect(() => { saveState(state); }, [state]);
 
@@ -135,7 +161,7 @@ function App() {
       <TopNav route={route} setRoute={setRoute} helpers={helpers} newCount={newCount} />
       <main style={{ flex: 1 }}>
         {route.name === "index" && <IndexView state={state} helpers={helpers} />}
-        {route.name === "volume" && <VolumeView seriesId={route.seriesId} helpers={helpers} />}
+        {route.name === "volume" && <VolumeView seriesId={route.seriesId} helpers={helpers} state={state} />}
         {route.name === "library" && <Library key="lib" state={state} helpers={helpers} />}
         {route.name === "timeline" && <TimelineArrange state={state} helpers={helpers} />}
         {route.name === "releases" && <Releases state={state} helpers={helpers} />}
