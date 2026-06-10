@@ -160,19 +160,23 @@ function App() {
     <div className="app-shell">
       {/* YouTube background video */}
       <div style={{
-        position: "fixed", inset: 0, zIndex: 0, overflow: "hidden", opacity: 0.08,
+        position: "fixed", inset: 0, zIndex: 0, overflow: "hidden", opacity: 0.15,
         pointerEvents: "none"
       }}>
-        <iframe
-          width="100%"
-          height="100%"
-          src="https://www.youtube.com/embed/B66feInucFY?autoplay=1&mute=1&loop=1&controls=0&modestbranding=1&playlist=B66feInucFY"
-          style={{
-            width: "100%", height: "100%", border: "none", objectFit: "cover"
-          }}
-          allow="autoplay"
-          title="Background Video"
-        />
+        <div style={{
+          width: "100%", height: "100%", background: "linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%)"
+        }}>
+          <iframe
+            width="100%"
+            height="100%"
+            src="https://www.youtube.com/embed/B66feInucFY?autoplay=1&mute=1&loop=1&controls=0&modestbranding=1&rel=0&playlist=B66feInucFY"
+            style={{
+              width: "100%", height: "100%", border: "none", objectFit: "cover", display: "block"
+            }}
+            allow="autoplay"
+            title="Background Video"
+          />
+        </div>
       </div>
       <TopNav route={route} setRoute={setRoute} helpers={helpers} newCount={newCount} />
       <main style={{ flex: 1, position: "relative", zIndex: 1 }}>

@@ -65,29 +65,29 @@ export const IndexView = ({ helpers, state }) => {
 
       {/* Continue Reading */}
       {lastRead && (
-        <section style={{ marginBottom: 60 }}>
+        <section style={{ marginBottom: 40 }}>
           <div className="wrap">
             <div style={{
-              display: "grid", gridTemplateColumns: "300px 1fr", gap: 32, alignItems: "center",
-              padding: 32, background: "linear-gradient(135deg, rgba(214,32,43,.08) 0%, rgba(214,32,43,.02) 100%)",
+              display: "flex", alignItems: "center", gap: 20,
+              padding: "20px 24px", background: "linear-gradient(135deg, rgba(214,32,43,.08) 0%, rgba(214,32,43,.02) 100%)",
               border: "1px solid rgba(214,32,43,.2)", borderRadius: 12,
             }}>
-              <div style={{ width: "100%", aspectRatio: "2/3", borderRadius: 8, overflow: "hidden", boxShadow: "var(--shadow)" }}>
+              <div style={{ width: 120, height: 180, borderRadius: 6, overflow: "hidden", flexShrink: 0, boxShadow: "var(--shadow)" }}>
                 <img src={`data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 450'><rect fill='%23222' width='300' height='450'/></svg>`} alt="" style={{ width: "100%", height: "100%" }} />
               </div>
-              <div>
-                <div style={{ fontSize: 13, fontFamily: "var(--head)", letterSpacing: ".08em", textTransform: "uppercase", color: "var(--red)", marginBottom: 12 }}>Continue Reading</div>
-                <h2 style={{ fontSize: 32, fontWeight: 600, marginBottom: 8, lineHeight: 1.2 }}>{lastRead.title}</h2>
-                <p style={{ fontSize: 15, color: "var(--muted)", marginBottom: 20 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: 11, fontFamily: "var(--head)", letterSpacing: ".08em", textTransform: "uppercase", color: "var(--red)", marginBottom: 6 }}>Continue Reading</div>
+                <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 4, lineHeight: 1.2 }}>{lastRead.title}</h3>
+                <p style={{ fontSize: 13, color: "var(--muted)", marginBottom: 12 }}>
                   {DDR_SERIES[lastRead.s].name} {lastRead.no}
                 </p>
                 <button onClick={() => helpers.onRead(lastRead)} style={{
-                  display: "inline-flex", alignItems: "center", gap: 10, padding: "14px 28px",
-                  background: "var(--red)", color: "#fff", borderRadius: 6, fontFamily: "var(--head)",
-                  fontWeight: 600, fontSize: 14, letterSpacing: ".06em", textTransform: "uppercase",
-                  boxShadow: "0 8px 24px -8px var(--red-glow)", transition: "all .2s",
+                  display: "inline-flex", alignItems: "center", gap: 8, padding: "10px 18px",
+                  background: "var(--red)", color: "#fff", borderRadius: 4, fontFamily: "var(--head)",
+                  fontWeight: 600, fontSize: 12, letterSpacing: ".05em", textTransform: "uppercase",
+                  boxShadow: "0 6px 16px -6px var(--red-glow)", transition: "all .2s",
                 }} onMouseEnter={(e) => e.currentTarget.style.transform = "translateY(-2px)"} onMouseLeave={(e) => e.currentTarget.style.transform = "none"}>
-                  <Icon name="play" size={16} /> Resume Reading
+                  <Icon name="play" size={14} /> Resume
                 </button>
               </div>
             </div>
