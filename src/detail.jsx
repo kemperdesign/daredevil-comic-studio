@@ -2,6 +2,7 @@ import React from 'react';
 import { DDR_SERIES, DDR_ARCS, DDR_ISSUES, DDR_byTL, DDR_ext } from './data';
 import { Icon, Badge, fmtDate, fmtDateLong } from './components';
 import { CoverImg } from './cards';
+import { savePdf } from './storage';
 
 const CreditRow = ({ k, v }) => (
   <div style={{ display: "flex", justifyContent: "space-between", gap: 16, padding: "11px 0", borderBottom: "1px solid var(--line)" }}>
@@ -16,6 +17,19 @@ export const IssueDetail = ({ iss, state, helpers }) => {
   const ext = DDR_ext(iss);
   const pct = st.page > 0 ? Math.round((st.page || 0) / (iss.pages - 1) * 100) : 0;
   const inProgress = st.page > 0 && !st.read;
+  const hasLocal = state.localFiles?.includes(iss.id);
+
+  const handleUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    try {
+      await savePdf(iss.id, file);
+      helpers.addLocalFile(iss.id);
+    } catch(err) {
+      console.error(err);
+      alert("Failed to save PDF");
+    }
+  };
 
   // siblings in same series for the "More from this series" rail
   const siblings = DDR_ISSUES.filter((x) => x.s === iss.s && x.id !== iss.id).slice(0, 6);
@@ -77,6 +91,18 @@ export const IssueDetail = ({ iss, state, helpers }) => {
                 }}><Icon name="play" size={18} /> {inProgress ? "Resume reading" : "Read now"}</button>
                 <ActionBtn active={st.fav} onClick={() => helpers.toggle(iss, "fav")} icon="star" label={st.fav ? "Favorited" : "Favorite"} tone="gold" />
                 <ActionBtn active={st.read} onClick={() => helpers.toggle(iss, "read")} icon="check" label={st.read ? "Read" : "Mark read"} tone="green" />
+                
+                {/* Upload Button */}
+                <label style={{
+                  display: "inline-flex", alignItems: "center", gap: 9, padding: "14px 20px", borderRadius: 6,
+                  background: hasLocal ? "rgba(62,166,106,.16)" : "var(--ink-3)",
+                  border: `1px solid ${hasLocal ? "var(--green)" : "var(--line)"}`, color: hasLocal ? "var(--green)" : "var(--paper)",
+                  fontFamily: "var(--head)", fontWeight: 600, fontSize: 14, letterSpacing: ".05em", textTransform: "uppercase", transition: "all .18s",
+                  cursor: "pointer"
+                }}>
+                  <input type="file" accept="application/pdf" style={{ display: "none" }} onChange={handleUpload} />
+                  <Icon name={hasLocal ? "check" : "plus"} size={16} /> {hasLocal ? "PDF Saved" : "Upload PDF"}
+                </label>
               </div>
             </div>
           </div>
