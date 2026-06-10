@@ -58,11 +58,13 @@ export const IndexView = ({ helpers }) => {
             gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
             gap: 32,
           }}>
-            {seriesList.map((group, idx) => (
+            {seriesList.map((group, idx) => {
+              const coverIssue = group.issues.find(iss => iss.no === '#1') || group.issues[0];
+              return (
               <VolumeCard
                 key={group.key}
                 series={group.series}
-                coverIssue={group.issues[0]}
+                coverIssue={coverIssue}
                 count={group.issues.length}
                 onClick={() => {
                   helpers.setRoute({ name: 'volume', seriesId: group.key });
