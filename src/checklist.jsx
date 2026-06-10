@@ -2,6 +2,7 @@ import React from 'react';
 import { DD_CHECKLIST } from './checklist-data';
 import { Icon, Ring } from './components';
 import { saveChecklist, loadChecklist, getDB } from './storage';
+import { DDR_ISSUES } from './data';
 
 export const ChecklistView = () => {
   const [checked, setChecked] = React.useState({});
@@ -25,9 +26,14 @@ export const ChecklistView = () => {
           const uploadedPdfs = keysReq.result;
           // Mark items with uploaded PDFs as checked
           const merged = { ...c };
-          uploadedPdfs.forEach(id => {
-            if (DD_CHECKLIST.some(item => item.id === id)) {
-              merged[id] = true;
+          uploadedPdfs.forEach(issueId => {
+            // Map issue IDs (v1_1) to checklist IDs (chk_1)
+            const iss = DDR_ISSUES.find(i => i.id === issueId);
+            if (iss && iss.s === 'v1') {
+              // Extract issue number and convert to checklist ID
+              const issNum = parseInt(iss.no.slice(1));
+              const chkId = `chk_${issNum}`;
+              merged[chkId] = true;
             }
           });
           setChecked(merged);
