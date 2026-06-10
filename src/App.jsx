@@ -158,8 +158,24 @@ function App() {
 
   return (
     <div className="app-shell">
+      {/* YouTube background video */}
+      <div style={{
+        position: "fixed", inset: 0, zIndex: 0, overflow: "hidden", opacity: 0.08,
+        pointerEvents: "none"
+      }}>
+        <iframe
+          width="100%"
+          height="100%"
+          src="https://www.youtube.com/embed/B66feInucFY?autoplay=1&mute=1&loop=1&controls=0&modestbranding=1&playlist=B66feInucFY"
+          style={{
+            width: "100%", height: "100%", border: "none", objectFit: "cover"
+          }}
+          allow="autoplay"
+          title="Background Video"
+        />
+      </div>
       <TopNav route={route} setRoute={setRoute} helpers={helpers} newCount={newCount} />
-      <main style={{ flex: 1 }}>
+      <main style={{ flex: 1, position: "relative", zIndex: 1 }}>
         {route.name === "index" && <IndexView state={state} helpers={helpers} />}
         {route.name === "volume" && <VolumeView seriesId={route.seriesId} helpers={helpers} state={state} />}
         {route.name === "library" && <Library key="lib" state={state} helpers={helpers} />}
@@ -333,7 +349,7 @@ const Toast = ({ msg }) => (
 );
 
 const Footer = () => (
-  <footer style={{ borderTop: "1px solid var(--line)", padding: "26px 0", marginTop: 10 }}>
+  <footer style={{ borderTop: "1px solid var(--line)", padding: "26px 0", marginTop: 10, position: "relative", zIndex: 1 }}>
     <div className="wrap" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap", color: "var(--muted-2)", fontSize: 12.5 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}><DevilMark size={18} color="var(--ink-4)" /> Hell's Kitchen Comic Studio · personal reader</div>
       <div>A design prototype · sample data · original artwork</div>
