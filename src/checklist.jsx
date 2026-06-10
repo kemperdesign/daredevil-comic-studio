@@ -1,7 +1,7 @@
 import React from 'react';
 import { DD_CHECKLIST } from './checklist-data';
 import { Icon, Ring } from './components';
-import { saveChecklist, loadChecklist } from './storage';
+import { saveChecklist, loadChecklist, getDB } from './storage';
 
 export const ChecklistView = () => {
   const [checked, setChecked] = React.useState({});
@@ -10,13 +10,39 @@ export const ChecklistView = () => {
   const [loaded, setLoaded] = React.useState(false);
 
   React.useEffect(() => {
-    loadChecklist().then((c) => {
-      setChecked(c);
-      setLoaded(true);
-    }).catch(e => {
-       console.error("Failed to load checklist", e);
-       setLoaded(true);
-    });
+    (async () => {
+      try {
+        // Load manually checked items
+        const c = await loadChecklist();
+
+        // Load uploaded PDFs from IndexedDB
+        const db = await getDB();
+        const tx = db.transaction('pdfs', 'readonly');
+        const store = tx.objectStore('pdfs');
+        const keysReq = store.getAllKeys();
+
+        keysReq.onsuccess = () => {
+          const uploadedPdfs = keysReq.result;
+          // Mark items with uploaded PDFs as checked
+          const merged = { ...c };
+          uploadedPdfs.forEach(id => {
+            if (DD_CHECKLIST.some(item => item.id === id)) {
+              merged[id] = true;
+            }
+          });
+          setChecked(merged);
+          setLoaded(true);
+        };
+
+        keysReq.onerror = () => {
+          setChecked(c);
+          setLoaded(true);
+        };
+      } catch (e) {
+        console.error("Failed to load checklist", e);
+        setLoaded(true);
+      }
+    })();
   }, []);
 
   const toggle = (id) => {
