@@ -27,6 +27,7 @@ export const Reader = ({ iss, state, helpers }) => {
   const [fit, setFit] = React.useState(state.ui.fit || "height");        // height | width
   const [zoom, setZoom] = React.useState(1);
   const [chrome, setChrome] = React.useState(true);
+  const [winSize, setWinSize] = React.useState({ w: window.innerWidth, h: window.innerHeight });
   const scrollRef = React.useRef(null);
   const idleTimer = React.useRef(null);
   
@@ -46,6 +47,16 @@ export const Reader = ({ iss, state, helpers }) => {
   }, [hasLocal, iss.id]);
 
   const activeTotal = pdfFile ? pdfPages : total;
+
+  React.useEffect(() => {
+    let timeout;
+    const handleResize = () => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => setWinSize({ w: window.innerWidth, h: window.innerHeight }), 100);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // persist mode/fit
   React.useEffect(() => { helpers.setUi({ readMode: mode, fit }); }, [mode, fit]);
@@ -101,9 +112,14 @@ export const Reader = ({ iss, state, helpers }) => {
   else if (mode === "spread") shown = page === 0 ? [0] : (page % 2 === 1 ? [page, page + 1] : [page - 1, page]).filter((i) => i < activeTotal);
   else shown = null;
 
+  const maxTotalWidth = mode === "spread" ? 1800 : 1000;
+  
+  const pdfPageHeight = fit === "height" ? (winSize.h - 132) * zoom : null;
+  const pdfPageWidth = fit === "width" ? (Math.min(winSize.w * 0.94, maxTotalWidth) / (shown?.length || 1)) * zoom : null;
+
   const fitStyle = fit === "height"
-    ? { height: `calc((100vh - 132px) * ${zoom})`, width: "auto" }
-    : { width: `calc(min(94vw, 760px) * ${zoom})`, height: "auto" };
+    ? { height: `${(winSize.h - 132) * zoom}px`, width: "auto" }
+    : { width: `${(Math.min(winSize.w * 0.94, maxTotalWidth) / (shown?.length || 1)) * zoom}px`, height: "auto" };
 
   return (
     <div onMouseMove={wake} style={{ position: "fixed", inset: 0, background: "#040405", zIndex: 200, display: "flex", flexDirection: "column" }}>
@@ -149,14 +165,14 @@ export const Reader = ({ iss, state, helpers }) => {
             <Document file={pdfFile} onLoadSuccess={({ numPages }) => setPdfPages(numPages)}>
               {Array.from({ length: pdfPages }).map((_, i) => (
                 <div key={i} data-pg={i} style={{ boxShadow: "0 16px 50px -16px #000", border: "1px solid #15151a", marginBottom: 14, display: "flex", justifyContent: "center" }}>
-                  <Page pageNumber={i + 1} width={window.innerWidth * 0.94} renderTextLayer={false} renderAnnotationLayer={false} />
+                  <Page pageNumber={i + 1} width={Math.min(winSize.w * 0.94, 1200) * zoom} renderTextLayer={false} renderAnnotationLayer={false} />
                 </div>
               ))}
             </Document>
           ) : (
             Array.from({ length: total }).map((_, i) => (
               <img key={i} data-pg={i} src={pageFor(iss, i)} alt={"Page " + (i + 1)} loading="lazy"
-                style={{ width: "min(94vw, 720px)", height: "auto", borderRadius: 3, boxShadow: "0 16px 50px -16px #000", border: "1px solid #15151a" }} />
+                style={{ width: `${Math.min(winSize.w * 0.94, 1200) * zoom}px`, height: "auto", borderRadius: 3, boxShadow: "0 16px 50px -16px #000", border: "1px solid #15151a" }} />
             ))
           )}
         </div>
@@ -167,7 +183,7 @@ export const Reader = ({ iss, state, helpers }) => {
               <div style={{ display: "flex", gap: 4, alignItems: "center", justifyContent: "center" }}>
                 {shown.map((i) => (
                   <div key={i} style={{ boxShadow: "0 24px 70px -20px #000", border: "1px solid #15151a" }}>
-                    <Page pageNumber={i + 1} height={fit === "height" ? (window.innerHeight - 132) * zoom : null} width={fit === "width" ? Math.min(window.innerWidth * 0.94, 760) * zoom : null} renderTextLayer={false} renderAnnotationLayer={false} />
+                    <Page pageNumber={i + 1} height={pdfPageHeight} width={pdfPageWidth} renderTextLayer={false} renderAnnotationLayer={false} />
                   </div>
                 ))}
               </div>
