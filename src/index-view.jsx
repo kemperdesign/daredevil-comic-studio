@@ -1,5 +1,5 @@
 import { DDR_ISSUES, DDR_UPCOMING, DDR_SERIES, DDR_byPub } from './data';
-import { VolumeCard } from './cards';
+import { VolumeCard, CoverImg } from './cards';
 import { Icon } from './components';
 
 export const IndexView = ({ helpers, state }) => {
@@ -73,7 +73,7 @@ export const IndexView = ({ helpers, state }) => {
                 border: "1px solid rgba(214,32,43,.2)", borderRadius: 12, width: 280,
               }}>
                 <div style={{ width: 80, height: 120, borderRadius: 6, overflow: "hidden", flexShrink: 0, boxShadow: "var(--shadow)" }}>
-                  <img src={`data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 450'><rect fill='%23222' width='300' height='450'/></svg>`} alt="" style={{ width: "100%", height: "100%" }} />
+                  <CoverImg iss={lastRead} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 10, fontFamily: "var(--head)", letterSpacing: ".08em", textTransform: "uppercase", color: "var(--red)", marginBottom: 4 }}>Continue Reading</div>
