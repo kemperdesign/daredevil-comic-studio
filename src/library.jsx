@@ -2,7 +2,7 @@ import React from 'react';
 import { DDR_SERIES, DDR_ARCS, DDR_ISSUES, DDR_byPub, DDR_byTL } from './data';
 import { Icon, DevilMark, Ring, Badge, fmtDate, fmtDateLong } from './components';
 import { CoverImg, CoverCard, RowItem } from './cards';
-import { getPdf } from './storage';
+import { getPdf, deletePdf } from './storage';
 
 export const SORT = { PUB: "pub", TL: "tl" };
 
@@ -117,6 +117,20 @@ export const Library = ({ state, helpers }) => {
     }
   };
 
+  const deletePdfFile = async (iss) => {
+    if (!window.confirm(`Remove PDF for ${iss.title}?`)) return;
+    try {
+      await deletePdf(iss.id);
+      // Remove from localFiles state
+      setState(s => ({
+        ...s,
+        localFiles: (s.localFiles || []).filter(id => id !== iss.id)
+      }));
+    } catch (e) {
+      console.error('Delete failed:', e);
+    }
+  };
+
   // grouping
   let groups;
   if (group === "series") {
@@ -223,14 +237,20 @@ export const Library = ({ state, helpers }) => {
               {g.items.map((iss, i) => (
                 <div key={iss.id} style={{ position: "relative" }}>
                   <CoverCard iss={iss} st={getSt(iss)} onOpen={onOpen} onRead={onRead} index={i} />
-                  <button onClick={() => downloadPdf(iss)} title="Download PDF" style={{
-                    position: "absolute", bottom: 8, left: 8, width: 32, height: 32, borderRadius: 6,
-                    background: "rgba(0,0,0,.6)", border: "1px solid rgba(255,255,255,.2)", color: "#fff",
-                    display: "grid", placeItems: "center", cursor: "pointer", transition: "background .2s",
-                    zIndex: 5,
-                  }} onMouseEnter={(e) => e.target.style.background = "rgba(0,0,0,.8)"} onMouseLeave={(e) => e.target.style.background = "rgba(0,0,0,.6)"}>
-                    <Icon name="arrowR" size={16} style={{ transform: "rotate(-90deg)" }} />
-                  </button>
+                  <div style={{ position: "absolute", bottom: 8, left: 8, display: "flex", gap: 6, zIndex: 5 }}>
+                    <button onClick={() => downloadPdf(iss)} title="Download PDF" style={{
+                      width: 32, height: 32, borderRadius: 6, background: "rgba(0,0,0,.6)", border: "1px solid rgba(255,255,255,.2)",
+                      color: "#fff", display: "grid", placeItems: "center", cursor: "pointer", transition: "background .2s",
+                    }} onMouseEnter={(e) => e.target.style.background = "rgba(0,0,0,.8)"} onMouseLeave={(e) => e.target.style.background = "rgba(0,0,0,.6)"}>
+                      <Icon name="arrowR" size={16} style={{ transform: "rotate(-90deg)" }} />
+                    </button>
+                    <button onClick={() => deletePdfFile(iss)} title="Delete PDF" style={{
+                      width: 32, height: 32, borderRadius: 6, background: "rgba(214,32,43,.7)", border: "1px solid rgba(255,255,255,.2)",
+                      color: "#fff", display: "grid", placeItems: "center", cursor: "pointer", transition: "background .2s",
+                    }} onMouseEnter={(e) => e.target.style.background = "rgba(214,32,43,.9)"} onMouseLeave={(e) => e.target.style.background = "rgba(214,32,43,.7)"}>
+                      <Icon name="x" size={16} />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -241,12 +261,20 @@ export const Library = ({ state, helpers }) => {
                   <div style={{ flex: 1 }}>
                     <RowItem iss={iss} st={getSt(iss)} onOpen={onOpen} onRead={onRead} showTL={sort === SORT.TL} index={i} />
                   </div>
-                  <button onClick={() => downloadPdf(iss)} title="Download PDF" style={{
-                    width: 38, height: 38, borderRadius: 5, display: "grid", placeItems: "center",
-                    background: "var(--ink-4)", color: "#fff", transition: "background .2s", cursor: "pointer",
-                  }} onMouseEnter={(e) => e.target.style.background = "var(--red)"} onMouseLeave={(e) => e.target.style.background = "var(--ink-4)"}>
-                    <Icon name="arrowR" size={16} style={{ transform: "rotate(-90deg)" }} />
-                  </button>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <button onClick={() => downloadPdf(iss)} title="Download PDF" style={{
+                      width: 38, height: 38, borderRadius: 5, display: "grid", placeItems: "center",
+                      background: "var(--ink-4)", color: "#fff", transition: "background .2s", cursor: "pointer",
+                    }} onMouseEnter={(e) => e.target.style.background = "var(--red)"} onMouseLeave={(e) => e.target.style.background = "var(--ink-4)"}>
+                      <Icon name="arrowR" size={16} style={{ transform: "rotate(-90deg)" }} />
+                    </button>
+                    <button onClick={() => deletePdfFile(iss)} title="Delete PDF" style={{
+                      width: 38, height: 38, borderRadius: 5, display: "grid", placeItems: "center",
+                      background: "var(--ink-4)", color: "#ff6068", transition: "all .2s", cursor: "pointer",
+                    }} onMouseEnter={(e) => { e.target.style.background = "#8b2626"; e.target.style.color = "#fff"; }} onMouseLeave={(e) => { e.target.style.background = "var(--ink-4)"; e.target.style.color = "#ff6068"; }}>
+                      <Icon name="x" size={16} />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
