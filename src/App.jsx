@@ -1,12 +1,14 @@
 import React from 'react';
 import { DDR_ISSUES, DDR_UPCOMING, DDR_SERIES } from './data';
 import { loadState, saveState, DevilMark, Icon, Badge } from './components';
+import { IndexView } from './index-view';
 import { Library } from './library';
 import { TimelineArrange } from './timeline';
 import { Releases, bucketOf } from './releases';
 import { ScreenView } from './screen';
 import { IssueDetail } from './detail';
 import { Reader } from './reader';
+import { savePdf } from './storage';
 
 // at startup, re-hydrate any owned upcoming issues into the library array
 function hydrateOwned(state) {
@@ -19,6 +21,7 @@ function hydrateOwned(state) {
 }
 
 const NAV = [
+  { key: "index", label: "All Comics", icon: "grid" },
   { key: "library", label: "Library", icon: "home" },
   { key: "timeline", label: "Timeline", icon: "timeline" },
   { key: "releases", label: "Releases", icon: "book" },
@@ -47,9 +50,10 @@ function App() {
       following: s.following || ["v8"],    // followed series keys
       watch: s.watch || {},                // screen id -> url
       ui: s.ui || {},                      // sort/vmode/group/readMode/fit
+      localFiles: s.localFiles || [],      // issue IDs with local PDFs
     };
   });
-  const [route, setRoute] = React.useState({ name: "library" });   // {name, iss}
+  const [route, setRoute] = React.useState({ name: "index" });   // {name, iss}
   const [reader, setReader] = React.useState(null);                // issue being read
   const [importOpen, setImportOpen] = React.useState(false);
   const [toast, setToast] = React.useState(null);
@@ -99,6 +103,7 @@ function App() {
     toggleFollow: (k) => setState((s) => ({ ...s, following: s.following.includes(k) ? s.following.filter((f) => f !== k) : [...s.following, k] })),
     setWatch: (id, url) => { setState((s) => { const w = { ...s.watch }; if (url) w[id] = url; else delete w[id]; return { ...s, watch: w }; }); flash(url ? "Watch link saved" : "Link removed"); },
     openImport: () => setImportOpen(true),
+    addLocalFile: (id) => setState((s) => ({ ...s, localFiles: [...new Set([...(s.localFiles || []), id])] })),
   };
 
   // releases "new" count for the nav badge
@@ -111,6 +116,7 @@ function App() {
     <div className="app-shell">
       <TopNav route={route} setRoute={setRoute} helpers={helpers} newCount={newCount} />
       <main style={{ flex: 1 }}>
+        {route.name === "index" && <IndexView state={state} helpers={helpers} />}
         {route.name === "library" && <Library key="lib" state={state} helpers={helpers} />}
         {route.name === "timeline" && <TimelineArrange state={state} helpers={helpers} />}
         {route.name === "releases" && <Releases state={state} helpers={helpers} />}
@@ -118,7 +124,7 @@ function App() {
         {route.name === "detail" && <IssueDetail iss={route.iss} state={state} helpers={helpers} />}
       </main>
       {reader && <Reader iss={reader} state={state} helpers={helpers} />}
-      {importOpen && <ImportModal onClose={() => setImportOpen(false)} />}
+      {importOpen && <ImportModal onClose={() => setImportOpen(false)} helpers={helpers} state={state} />}
       {toast && <Toast msg={toast} />}
       <Footer />
     </div>
@@ -127,7 +133,7 @@ function App() {
 
 // ---- top navigation ----
 const TopNav = ({ route, setRoute, helpers, newCount }) => {
-  const active = route.name === "detail" ? "library" : route.name;
+  const active = route.name === "detail" ? "index" : route.name;
   return (
     <header style={{
       position: "sticky", top: 0, zIndex: 100, height: 64, display: "flex", alignItems: "center",
@@ -170,13 +176,37 @@ const TopNav = ({ route, setRoute, helpers, newCount }) => {
 };
 
 // ---- import modal (mocked file ingest) ----
-const ImportModal = ({ onClose }) => {
-  const [stage, setStage] = React.useState("drop"); // drop | scanning | done
+const ImportModal = ({ onClose, helpers, state }) => {
+  const [stage, setStage] = React.useState("drop");
   const [drag, setDrag] = React.useState(false);
-  const startScan = () => {
-    setStage("scanning");
-    setTimeout(() => setStage("done"), 2200);
+  const [file, setFile] = React.useState(null);
+  const [issueId, setIssueId] = React.useState("");
+
+  const handleFile = (f) => {
+    if (f) {
+      setFile(f);
+      setStage("select");
+      const numMatch = f.name.match(/\d+/);
+      const guess = numMatch ? DDR_ISSUES.find(i => i.no == numMatch[0]) : null;
+      if (guess) setIssueId(guess.id);
+      else setIssueId(DDR_ISSUES[0].id);
+    }
   };
+
+  const onSave = async () => {
+    if (!file || !issueId) return;
+    setStage("saving");
+    try {
+      await savePdf(issueId, file);
+      helpers.addLocalFile(issueId);
+      setStage("done");
+    } catch(e) {
+      console.error(e);
+      alert("Failed to save file");
+      setStage("drop");
+    }
+  };
+
   return (
     <div onClick={onClose} style={overlay}>
       <div onClick={(e) => e.stopPropagation()} className="fade-up" style={{ width: "min(560px, 92vw)", background: "var(--ink-2)", border: "1px solid var(--line-2)", borderRadius: 14, overflow: "hidden", boxShadow: "var(--shadow)" }}>
@@ -187,36 +217,43 @@ const ImportModal = ({ onClose }) => {
         <div style={{ padding: 24 }}>
           {stage === "drop" && (
             <>
-              <div onDragOver={(e) => { e.preventDefault(); setDrag(true); }} onDragLeave={() => setDrag(false)}
-                onDrop={(e) => { e.preventDefault(); setDrag(false); startScan(); }} onClick={startScan}
+              <label onDragOver={(e) => { e.preventDefault(); setDrag(true); }} onDragLeave={() => setDrag(false)}
+                onDrop={(e) => { e.preventDefault(); setDrag(false); handleFile(e.dataTransfer.files[0]); }}
                 style={{
-                  border: `2px dashed ${drag ? "var(--red)" : "var(--line-2)"}`, borderRadius: 12, padding: "44px 24px", textAlign: "center",
+                  display: "block", border: `2px dashed ${drag ? "var(--red)" : "var(--line-2)"}`, borderRadius: 12, padding: "44px 24px", textAlign: "center",
                   background: drag ? "rgba(214,32,43,.06)" : "var(--ink)", cursor: "pointer", transition: "all .18s",
                 }}>
+                <input type="file" accept="application/pdf" style={{ display: "none" }} onChange={(e) => handleFile(e.target.files[0])} />
                 <div style={{ display: "flex", justifyContent: "center", marginBottom: 14, color: drag ? "var(--red)" : "var(--muted-2)" }}><Icon name="plus" size={40} sw={1.4} /></div>
-                <div style={{ fontFamily: "var(--head)", fontWeight: 600, fontSize: 18 }}>Drop CBR or PDF files here</div>
-                <div style={{ color: "var(--muted)", fontSize: 13.5, marginTop: 6 }}>or click to browse — we'll scan online to match covers, creators &amp; dates</div>
-              </div>
-              <div style={{ display: "flex", gap: 10, marginTop: 16, justifyContent: "center", flexWrap: "wrap" }}>
-                {["CBR", "CBZ", "PDF"].map((f) => <Badge key={f}>{f}</Badge>)}
-              </div>
+                <div style={{ fontFamily: "var(--head)", fontWeight: 600, fontSize: 18 }}>Drop PDF file here</div>
+                <div style={{ color: "var(--muted)", fontSize: 13.5, marginTop: 6 }}>or click to browse</div>
+              </label>
             </>
           )}
-          {stage === "scanning" && (
-            <div style={{ textAlign: "center", padding: "32px 10px" }}>
-              <div style={{ margin: "0 auto 20px", width: 54, height: 54, borderRadius: "50%", border: "3px solid var(--line)", borderTopColor: "var(--red)", animation: "spin 0.8s linear infinite" }} />
-              <div style={{ fontFamily: "var(--head)", fontWeight: 600, fontSize: 17 }}>Matching metadata online…</div>
-              <div style={{ color: "var(--muted)", fontSize: 13.5, marginTop: 6 }}>Reading covers, identifying issues, pulling creators and dates.</div>
+          {stage === "select" && (
+            <div style={{ padding: "10px 0" }}>
+              <div style={{ fontFamily: "var(--head)", fontWeight: 600, fontSize: 17, marginBottom: 16 }}>Attach '{file.name}' to Issue:</div>
+              <select value={issueId} onChange={(e) => setIssueId(e.target.value)} style={{ width: "100%", padding: "12px", background: "var(--ink-3)", border: "1px solid var(--line)", borderRadius: 6, color: "var(--paper)", fontSize: 15, outline: "none", marginBottom: 24 }}>
+                {DDR_ISSUES.map(i => <option key={i.id} value={i.id}>{i.title} ({DDR_SERIES[i.s].name} {i.no})</option>)}
+              </select>
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: 12 }}>
+                <button onClick={() => setStage("drop")} style={{ padding: "10px 20px", color: "var(--muted)", fontWeight: 600 }}>Cancel</button>
+                <button onClick={onSave} style={{ padding: "10px 24px", borderRadius: 6, background: "var(--red)", color: "#fff", fontFamily: "var(--head)", fontWeight: 600, textTransform: "uppercase" }}>Save to Library</button>
+              </div>
             </div>
+          )}
+          {stage === "saving" && (
+             <div style={{ textAlign: "center", padding: "32px 10px" }}>
+               <div style={{ margin: "0 auto 20px", width: 54, height: 54, borderRadius: "50%", border: "3px solid var(--line)", borderTopColor: "var(--red)", animation: "spin 0.8s linear infinite" }} />
+               <div style={{ fontFamily: "var(--head)", fontWeight: 600, fontSize: 17 }}>Saving to device...</div>
+             </div>
           )}
           {stage === "done" && (
             <div style={{ textAlign: "center", padding: "28px 10px" }}>
               <div style={{ margin: "0 auto 18px", width: 54, height: 54, borderRadius: "50%", background: "rgba(62,166,106,.16)", border: "1px solid var(--green)", display: "grid", placeItems: "center", color: "var(--green)" }}><Icon name="check" size={28} sw={2.4} /></div>
-              <div style={{ fontFamily: "var(--head)", fontWeight: 600, fontSize: 18 }}>Demo library is already loaded</div>
-              <p style={{ color: "var(--muted)", fontSize: 13.5, marginTop: 8, lineHeight: 1.55, maxWidth: 380, marginInline: "auto" }}>
-                This is a design prototype — your real CBR/PDF files would import and auto-match here. The collection you see is sample data to show the experience.
-              </p>
-              <button onClick={onClose} style={{ marginTop: 20, padding: "11px 24px", borderRadius: 7, background: "var(--red)", color: "#fff", fontFamily: "var(--head)", fontWeight: 600, fontSize: 14, letterSpacing: ".05em", textTransform: "uppercase" }}>Browse the collection</button>
+              <div style={{ fontFamily: "var(--head)", fontWeight: 600, fontSize: 18 }}>Saved successfully</div>
+              <p style={{ color: "var(--muted)", fontSize: 13.5, marginTop: 8 }}>The PDF is stored securely in your browser.</p>
+              <button onClick={onClose} style={{ marginTop: 20, padding: "11px 24px", borderRadius: 7, background: "var(--red)", color: "#fff", fontFamily: "var(--head)", fontWeight: 600, fontSize: 14, letterSpacing: ".05em", textTransform: "uppercase" }}>Close</button>
             </div>
           )}
         </div>

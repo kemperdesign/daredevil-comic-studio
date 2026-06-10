@@ -2,6 +2,15 @@ import React from 'react';
 import { DDR_SERIES } from './data';
 import { DDR_ART } from './art';
 import { Icon, Ring } from './components';
+import { getPdf } from './storage';
+import { Document, Page, pdfjs } from 'react-pdf';
+import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
+import 'react-pdf/dist/esm/Page/TextLayer.css';
+
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.mjs',
+  import.meta.url,
+).toString();
 
 const pageCache = {};
 export function pageFor(iss, i) {
@@ -20,6 +29,18 @@ export const Reader = ({ iss, state, helpers }) => {
   const [chrome, setChrome] = React.useState(true);
   const scrollRef = React.useRef(null);
   const idleTimer = React.useRef(null);
+  
+  const hasLocal = state.localFiles?.includes(iss.id);
+  const [pdfFile, setPdfFile] = React.useState(null);
+  const [pdfPages, setPdfPages] = React.useState(iss.pages);
+
+  React.useEffect(() => {
+    if (hasLocal) {
+      getPdf(iss.id).then((blob) => setPdfFile(blob)).catch(console.error);
+    }
+  }, [hasLocal, iss.id]);
+
+  const activeTotal = pdfFile ? pdfPages : total;
 
   // persist mode/fit
   React.useEffect(() => { helpers.setUi({ readMode: mode, fit }); }, [mode, fit]);
@@ -31,7 +52,7 @@ export const Reader = ({ iss, state, helpers }) => {
 
   // spread step is 2 (after the cover, pages pair up)
   const step = mode === "spread" ? 2 : 1;
-  const clamp = (p) => Math.max(0, Math.min(total - 1, p));
+  const clamp = (p) => Math.max(0, Math.min(activeTotal - 1, p));
   const go = (dir) => setPage((p) => clamp(p + dir * step));
 
   // keyboard
@@ -67,12 +88,12 @@ export const Reader = ({ iss, state, helpers }) => {
   };
   React.useEffect(() => { wake(); return () => clearTimeout(idleTimer.current); }, []);
 
-  const pct = Math.round(page / (total - 1) * 100);
+  const pct = Math.round(page / (activeTotal - 1) * 100);
 
   // pages currently shown
   let shown;
   if (mode === "single") shown = [page];
-  else if (mode === "spread") shown = page === 0 ? [0] : (page % 2 === 1 ? [page, page + 1] : [page - 1, page]).filter((i) => i < total);
+  else if (mode === "spread") shown = page === 0 ? [0] : (page % 2 === 1 ? [page, page + 1] : [page - 1, page]).filter((i) => i < activeTotal);
   else shown = null;
 
   const fitStyle = fit === "height"
@@ -119,24 +140,46 @@ export const Reader = ({ iss, state, helpers }) => {
       {/* page stage */}
       {mode === "scroll" ? (
         <div ref={scrollRef} onScroll={onScroll} style={{ position: "absolute", inset: 0, overflowY: "auto", display: "flex", flexDirection: "column", alignItems: "center", gap: 14, padding: "80px 0 90px" }}>
-          {Array.from({ length: total }).map((_, i) => (
-            <img key={i} data-pg={i} src={pageFor(iss, i)} alt={"Page " + (i + 1)} loading="lazy"
-              style={{ width: "min(94vw, 720px)", height: "auto", borderRadius: 3, boxShadow: "0 16px 50px -16px #000", border: "1px solid #15151a" }} />
-          ))}
+          {pdfFile ? (
+            <Document file={pdfFile} onLoadSuccess={({ numPages }) => setPdfPages(numPages)}>
+              {Array.from({ length: pdfPages }).map((_, i) => (
+                <div key={i} data-pg={i} style={{ boxShadow: "0 16px 50px -16px #000", border: "1px solid #15151a", marginBottom: 14, display: "flex", justifyContent: "center" }}>
+                  <Page pageNumber={i + 1} width={window.innerWidth * 0.94} renderTextLayer={false} renderAnnotationLayer={false} />
+                </div>
+              ))}
+            </Document>
+          ) : (
+            Array.from({ length: total }).map((_, i) => (
+              <img key={i} data-pg={i} src={pageFor(iss, i)} alt={"Page " + (i + 1)} loading="lazy"
+                style={{ width: "min(94vw, 720px)", height: "auto", borderRadius: 3, boxShadow: "0 16px 50px -16px #000", border: "1px solid #15151a" }} />
+            ))
+          )}
         </div>
       ) : (
         <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", overflow: "auto", padding: "70px 0" }}>
-          <div style={{ display: "flex", gap: 4, alignItems: "center", justifyContent: "center" }}>
-            {shown.map((i) => (
-              <img key={i} src={pageFor(iss, i)} alt={"Page " + (i + 1)}
-                style={{ ...fitStyle, borderRadius: 3, boxShadow: "0 24px 70px -20px #000", border: "1px solid #15151a", maxWidth: "none" }} />
-            ))}
-          </div>
+          {pdfFile ? (
+            <Document file={pdfFile} onLoadSuccess={({ numPages }) => setPdfPages(numPages)}>
+              <div style={{ display: "flex", gap: 4, alignItems: "center", justifyContent: "center" }}>
+                {shown.map((i) => (
+                  <div key={i} style={{ boxShadow: "0 24px 70px -20px #000", border: "1px solid #15151a" }}>
+                    <Page pageNumber={i + 1} height={fit === "height" ? (window.innerHeight - 132) * zoom : null} width={fit === "width" ? Math.min(window.innerWidth * 0.94, 760) * zoom : null} renderTextLayer={false} renderAnnotationLayer={false} />
+                  </div>
+                ))}
+              </div>
+            </Document>
+          ) : (
+            <div style={{ display: "flex", gap: 4, alignItems: "center", justifyContent: "center" }}>
+              {shown.map((i) => (
+                <img key={i} src={pageFor(iss, i)} alt={"Page " + (i + 1)}
+                  style={{ ...fitStyle, borderRadius: 3, boxShadow: "0 24px 70px -20px #000", border: "1px solid #15151a", maxWidth: "none" }} />
+              ))}
+            </div>
+          )}
           {/* click zones */}
           {page > 0 && <button onClick={() => go(-1)} aria-label="Previous" style={{ ...navZone, left: 0 }} className="nav-zone">
             <span style={navArrow}><Icon name="chevL" size={26} /></span>
           </button>}
-          {page < total - 1 && <button onClick={() => go(1)} aria-label="Next" style={{ ...navZone, right: 0, justifyContent: "flex-end" }} className="nav-zone">
+          {page < activeTotal - 1 && <button onClick={() => go(1)} aria-label="Next" style={{ ...navZone, right: 0, justifyContent: "flex-end" }} className="nav-zone">
             <span style={navArrow}><Icon name="chevR" size={26} /></span>
           </button>}
         </div>
@@ -149,10 +192,10 @@ export const Reader = ({ iss, state, helpers }) => {
         transform: chrome ? "none" : "translateY(100%)", transition: "transform .3s", pointerEvents: chrome ? "auto" : "none",
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 16, maxWidth: 900, margin: "0 auto" }}>
-          <span style={{ fontFamily: "var(--head)", fontSize: 13, color: "var(--muted)", minWidth: 70 }}>{page + 1} / {total}</span>
+          <span style={{ fontFamily: "var(--head)", fontSize: 13, color: "var(--muted)", minWidth: 70 }}>{page + 1} / {activeTotal}</span>
           <div style={{ flex: 1, position: "relative", height: 30, display: "flex", alignItems: "center" }}>
             {/* page ticks / scrubber */}
-            <input type="range" min={0} max={total - 1} value={page} onChange={(e) => { const v = +e.target.value; if (mode === "scroll") { const el = scrollRef.current.querySelector(`[data-pg="${v}"]`); el && scrollRef.current.scrollTo({ top: el.offsetTop - 76 }); } setPage(v); }}
+            <input type="range" min={0} max={activeTotal - 1} value={page} onChange={(e) => { const v = +e.target.value; if (mode === "scroll") { const el = scrollRef.current.querySelector(`[data-pg="${v}"]`); el && scrollRef.current.scrollTo({ top: el.offsetTop - 76 }); } setPage(v); }}
               style={{ width: "100%", accentColor: "var(--red)", cursor: "pointer" }} />
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 96, justifyContent: "flex-end" }}>
