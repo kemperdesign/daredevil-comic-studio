@@ -2,6 +2,7 @@ import React from 'react';
 import { DDR_SERIES } from './data';
 import { DDR_ART } from './art';
 import { Icon, Ring, Badge, fmtDate, fmtDateLong, lastName } from './components';
+import { getCover } from './storage';
 
 // Memoized cover-image (data-uri SVG from the art engine)
 const coverCache = {};
@@ -10,11 +11,31 @@ export function coverFor(iss) {
   return coverCache[iss.id];
 }
 
-export const CoverImg = ({ iss, style, className }) => (
-  <img src={coverFor(iss)} alt={`${DDR_SERIES[iss.s].name} ${iss.no}`}
-    loading="lazy" className={className}
-    style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", ...style }} />
-);
+export const CoverImg = ({ iss, style, className }) => {
+  const [src, setSrc] = React.useState(coverCache[iss.id]);
+
+  React.useEffect(() => {
+    let mounted = true;
+    if (!coverCache[iss.id]) {
+      setSrc(coverFor(iss));
+    }
+    
+    getCover(iss.id).then(custom => {
+      if (custom && mounted) {
+        coverCache[iss.id] = custom;
+        setSrc(custom);
+      }
+    }).catch(()=>{});
+
+    return () => { mounted = false; };
+  }, [iss.id]);
+
+  return (
+    <img src={src || coverFor(iss)} alt={`${DDR_SERIES[iss.s].name} ${iss.no}`}
+      loading="lazy" className={className}
+      style={{ width: "100%", height: "100%", objectFit: "cover", display: "block", ...style }} />
+  );
+};
 
 // status corner flags shown on a cover
 const CoverFlags = ({ st }) => (

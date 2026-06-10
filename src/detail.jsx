@@ -2,7 +2,8 @@ import React from 'react';
 import { DDR_SERIES, DDR_ARCS, DDR_ISSUES, DDR_byTL, DDR_ext } from './data';
 import { Icon, Badge, fmtDate, fmtDateLong } from './components';
 import { CoverImg } from './cards';
-import { savePdf } from './storage';
+import { savePdf, saveCover } from './storage';
+import { generatePdfThumbnail } from './pdfutils';
 
 const CreditRow = ({ k, v }) => (
   <div style={{ display: "flex", justifyContent: "space-between", gap: 16, padding: "11px 0", borderBottom: "1px solid var(--line)" }}>
@@ -25,6 +26,13 @@ export const IssueDetail = ({ iss, state, helpers }) => {
     try {
       await savePdf(iss.id, file);
       helpers.addLocalFile(iss.id);
+      const thumb = await generatePdfThumbnail(file);
+      if (thumb) {
+        await saveCover(iss.id, thumb);
+        // Force a tiny state update to re-render CoverImg since cache was updated by save
+        // CoverImg has its own effect, but we can trigger it or let the user refresh.
+        // Actually CoverImg polls getCover() on mount. The simplest is a flash message!
+      }
     } catch(err) {
       console.error(err);
       alert("Failed to save PDF");

@@ -8,7 +8,8 @@ import { Releases, bucketOf } from './releases';
 import { ScreenView } from './screen';
 import { IssueDetail } from './detail';
 import { Reader } from './reader';
-import { savePdf } from './storage';
+import { savePdf, saveCover } from './storage';
+import { generatePdfThumbnail } from './pdfutils';
 
 // at startup, re-hydrate any owned upcoming issues into the library array
 function hydrateOwned(state) {
@@ -224,6 +225,8 @@ const ImportModal = ({ onClose, helpers, state }) => {
     try {
       await savePdf(issueId, file);
       helpers.addLocalFile(issueId);
+      const thumb = await generatePdfThumbnail(file);
+      if (thumb) await saveCover(issueId, thumb);
       setStage("done");
     } catch(e) {
       console.error(e);
