@@ -8,6 +8,7 @@ import { Releases, bucketOf } from './releases';
 import { ScreenView } from './screen';
 import { IssueDetail } from './detail';
 import { LinksView } from './links';
+import { ChecklistView } from './checklist';
 import { Reader } from './reader';
 import { savePdf, saveCover } from './storage';
 import { generatePdfThumbnail } from './pdfutils';
@@ -26,6 +27,7 @@ const NAV = [
   { key: "index", label: "All Comics", icon: "grid" },
   { key: "library", label: "Library", icon: "home" },
   { key: "timeline", label: "Timeline", icon: "timeline" },
+  { key: "checklist", label: "Checklist", icon: "rows" },
   { key: "releases", label: "Releases", icon: "book" },
   { key: "screen", label: "On Screen", icon: "play" },
   { key: "links", label: "Links", icon: "link" },
@@ -134,6 +136,7 @@ function App() {
         {route.name === "timeline" && <TimelineArrange state={state} helpers={helpers} />}
         {route.name === "releases" && <Releases state={state} helpers={helpers} />}
         {route.name === "screen" && <ScreenView state={state} helpers={helpers} />}
+        {route.name === "checklist" && <ChecklistView />}
         {route.name === "detail" && <IssueDetail iss={route.iss} state={state} helpers={helpers} />}
         {route.name === "links" && <LinksView />}
       </main>

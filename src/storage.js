@@ -1,14 +1,16 @@
 const DB_NAME = 'ddr_comics';
 const STORE_NAME = 'pdfs';
 const COVERS_STORE = 'covers';
+const CHECK_STORE = 'checklist';
 
 function getDB() {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open(DB_NAME, 2);
+    const req = indexedDB.open(DB_NAME, 3);
     req.onupgradeneeded = (e) => {
       const db = e.target.result;
       if (!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME);
       if (!db.objectStoreNames.contains(COVERS_STORE)) db.createObjectStore(COVERS_STORE);
+      if (!db.objectStoreNames.contains(CHECK_STORE)) db.createObjectStore(CHECK_STORE);
     };
     req.onsuccess = () => resolve(req.result);
     req.onerror = () => reject(req.error);
