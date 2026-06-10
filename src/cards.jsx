@@ -21,9 +21,18 @@ export const CoverImg = ({ iss, style, className }) => {
     }
     
     getCover(iss.id).then(custom => {
-      if (custom && mounted) {
+      if (!mounted) return;
+      if (custom) {
         coverCache[iss.id] = custom;
         setSrc(custom);
+      } else {
+        const url = `/covers/${iss.id}.jpg`;
+        fetch(url, {method: 'HEAD'}).then(res => {
+          if (res.ok && mounted) {
+            coverCache[iss.id] = url;
+            setSrc(url);
+          }
+        }).catch(()=>{});
       }
     }).catch(()=>{});
 
