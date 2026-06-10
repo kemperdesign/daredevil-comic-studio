@@ -72,7 +72,8 @@ export const IndexView = ({ helpers }) => {
                 }}
                 index={idx}
               />
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
