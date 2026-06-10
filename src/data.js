@@ -91,8 +91,8 @@ export const DDR_ISSUES = [
     synopsis:"A new player named Omen circles Matt Murdock, and the secrets of Hell's Kitchen refuse to stay buried. An unprecedented era opens on a city full of ghosts.", tl:80,
     ext:{ inker:"Lee Garbett", colorist:"Frank Martin", letterer:"VC's Ariana Maher", editor:"Devin Lewis", rating:"Rated T+", price:"$5.99", upc:"75960621282800111" }, pdfUrl: "/sample.pdf" },
 
-  { id:"v1_1", s:"v1", no:"#-1", title:"A Time to Say Farewell", writer:"Various", penciller:"Various", cover:"Various",
-    date:"1960-01-01", pages:22, arc:"origin", seed:1, synopsis:"Classic Volume 1 issue.", tl:6, coverUrl: "https://static.wikia.nocookie.net/marveldatabase/images/b/be/Daredevil_Vol_1_-1.jpg" },
+  { id:"v1_1", s:"v1", no:"#1", title:"The Origin of Daredevil", writer:"Various", penciller:"Various", cover:"Various",
+    date:"1960-01-01", pages:22, arc:"origin", seed:1, synopsis:"Classic Volume 1 issue.", tl:6, coverUrl: "https://static.wikia.nocookie.net/marveldatabase/images/7/7c/Daredevil_Vol_1_1.jpg" },
   { id:"v1_2", s:"v1", no:"#2", title:"The Evil Menace of Electro!", writer:"Various", penciller:"Various", cover:"Various",
     date:"1960-01-01", pages:22, arc:"origin", seed:2, synopsis:"Classic Volume 1 issue.", tl:7, coverUrl: "https://static.wikia.nocookie.net/marveldatabase/images/4/40/Daredevil_Vol_1_2.jpg" },
   { id:"v1_3", s:"v1", no:"#3", title:"The Owl, Ominous Overlord of Crime!", writer:"Various", penciller:"Various", cover:"Various",
