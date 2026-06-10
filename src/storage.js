@@ -69,3 +69,34 @@ export async function getCover(id) {
     req.onerror = () => reject(req.error);
   });
 }
+
+// ---- Checklist DB ----
+export async function saveChecklist(id, checked) {
+  const db = await getDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(CHECK_STORE, 'readwrite');
+    const store = tx.objectStore(CHECK_STORE);
+    const req = store.put(checked, id);
+    req.onsuccess = () => resolve();
+    req.onerror = () => reject(req.error);
+  });
+}
+
+export async function loadChecklist() {
+  const db = await getDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(CHECK_STORE, 'readonly');
+    const store = tx.objectStore(CHECK_STORE);
+    const req = store.getAllKeys();
+    const reqVals = store.getAll();
+    
+    reqVals.onsuccess = () => {
+       const keys = req.result;
+       const vals = reqVals.result;
+       const map = {};
+       keys.forEach((k, i) => map[k] = vals[i]);
+       resolve(map);
+    };
+    reqVals.onerror = () => reject(reqVals.error);
+  });
+}
