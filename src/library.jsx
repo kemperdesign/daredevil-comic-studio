@@ -3,6 +3,7 @@ import { DDR_SERIES, DDR_ARCS, DDR_ISSUES, DDR_byPub, DDR_byTL } from './data';
 import { Icon, DevilMark, Ring, Badge, fmtDate, fmtDateLong } from './components';
 import { CoverImg, CoverCard, RowItem } from './cards';
 import { NewForYou } from './releases';
+import { getPdf } from './storage';
 
 export const SORT = { PUB: "pub", TL: "tl" };
 
@@ -81,9 +82,8 @@ export const Library = ({ state, helpers }) => {
   React.useEffect(() => { helpers.setUi({ sort, vmode, group }); }, [sort, vmode, group]);
 
   const tlOrder = state.tlOrder;
-  let issues = sort === SORT.TL ? DDR_byTL(tlOrder) : DDR_byPub();
-  // attach timeline positions
-  if (sort === SORT.TL) issues.forEach((it, i) => it._tlPos = i + 1);
+  // Filter to only uploaded issues, sorted by publication order
+  let issues = DDR_byPub().filter((iss) => state.localFiles?.includes(iss.id));
 
   // filter
   const ql = q.trim().toLowerCase();
@@ -100,8 +100,23 @@ export const Library = ({ state, helpers }) => {
     return true;
   });
 
-  const continueItems = DDR_byPub().filter((iss) => { const st = getSt(iss); return st.page > 0 && !st.read; })
+  const continueItems = DDR_byPub().filter((iss) => { const st = getSt(iss); return state.localFiles?.includes(iss.id) && st.page > 0 && !st.read; })
     .sort((a, b) => (getSt(b).ts || 0) - (getSt(a).ts || 0)).slice(0, 6);
+
+  const downloadPdf = async (iss) => {
+    try {
+      const pdfBlob = await getPdf(iss.id);
+      if (!pdfBlob) return;
+      const url = URL.createObjectURL(pdfBlob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${iss.title.replace(/[/\\?%*:|"<>]/g, '')}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error('Download failed:', e);
+    }
+  };
 
   // grouping
   let groups;
@@ -134,8 +149,11 @@ export const Library = ({ state, helpers }) => {
       {/* toolbar */}
       <div style={{ position: "sticky", top: 64, zIndex: 30, background: "linear-gradient(var(--ink) 70%, transparent)", paddingBottom: 14, marginBottom: 8 }}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 14, marginBottom: 16 }}>
-          <h1 className="display" style={{ fontSize: 32 }}>The Collection</h1>
-          <span style={{ color: "var(--muted-2)", fontSize: 14 }}>{issues.length} issues</span>
+          <div>
+            <h1 className="display" style={{ fontSize: 32 }}>My Library</h1>
+            <p style={{ color: "var(--muted)", fontSize: 13, marginTop: 4 }}>Uploaded PDFs in publication order</p>
+          </div>
+          <span style={{ color: "var(--muted-2)", fontSize: 14, marginLeft: "auto" }}>{issues.length} issues</span>
         </div>
         <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
           {/* sort: the headline feature */}
@@ -204,11 +222,35 @@ export const Library = ({ state, helpers }) => {
           )}
           {vmode === "grid" ? (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: "28px 22px" }}>
-              {g.items.map((iss, i) => <CoverCard key={iss.id} iss={iss} st={getSt(iss)} onOpen={onOpen} onRead={onRead} index={i} />)}
+              {g.items.map((iss, i) => (
+                <div key={iss.id} style={{ position: "relative" }}>
+                  <CoverCard iss={iss} st={getSt(iss)} onOpen={onOpen} onRead={onRead} index={i} />
+                  <button onClick={() => downloadPdf(iss)} title="Download PDF" style={{
+                    position: "absolute", bottom: 8, left: 8, width: 32, height: 32, borderRadius: 6,
+                    background: "rgba(0,0,0,.6)", border: "1px solid rgba(255,255,255,.2)", color: "#fff",
+                    display: "grid", placeItems: "center", cursor: "pointer", transition: "background .2s",
+                    zIndex: 5,
+                  }} onMouseEnter={(e) => e.target.style.background = "rgba(0,0,0,.8)"} onMouseLeave={(e) => e.target.style.background = "rgba(0,0,0,.6)"}>
+                    <Icon name="arrowR" size={16} style={{ transform: "rotate(-90deg)" }} />
+                  </button>
+                </div>
+              ))}
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-              {g.items.map((iss, i) => <RowItem key={iss.id} iss={iss} st={getSt(iss)} onOpen={onOpen} onRead={onRead} showTL={sort === SORT.TL} index={i} />)}
+              {g.items.map((iss, i) => (
+                <div key={iss.id} style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div style={{ flex: 1 }}>
+                    <RowItem iss={iss} st={getSt(iss)} onOpen={onOpen} onRead={onRead} showTL={sort === SORT.TL} index={i} />
+                  </div>
+                  <button onClick={() => downloadPdf(iss)} title="Download PDF" style={{
+                    width: 38, height: 38, borderRadius: 5, display: "grid", placeItems: "center",
+                    background: "var(--ink-4)", color: "#fff", transition: "background .2s", cursor: "pointer",
+                  }} onMouseEnter={(e) => e.target.style.background = "var(--red)"} onMouseLeave={(e) => e.target.style.background = "var(--ink-4)"}>
+                    <Icon name="arrowR" size={16} style={{ transform: "rotate(-90deg)" }} />
+                  </button>
+                </div>
+              ))}
             </div>
           )}
         </section>
