@@ -103,7 +103,17 @@ function App() {
     toggleFollow: (k) => setState((s) => ({ ...s, following: s.following.includes(k) ? s.following.filter((f) => f !== k) : [...s.following, k] })),
     setWatch: (id, url) => { setState((s) => { const w = { ...s.watch }; if (url) w[id] = url; else delete w[id]; return { ...s, watch: w }; }); flash(url ? "Watch link saved" : "Link removed"); },
     openImport: () => setImportOpen(true),
-    addLocalFile: (id) => setState((s) => ({ ...s, localFiles: [...new Set([...(s.localFiles || []), id])] })),
+    addLocalFile: (id) => {
+      const iss = DDR_ISSUES.find(i => i.id === id) || DDR_UPCOMING.find(i => i.id === id);
+      if (iss && !DDR_ISSUES.find(x => x.id === iss.id)) DDR_ISSUES.push(iss);
+      setState((s) => ({ 
+        ...s, 
+        localFiles: [...new Set([...(s.localFiles || []), id])],
+        owned: [...new Set([...(s.owned || []), id])],
+        pull: s.pull.filter((p) => p !== id)
+      }));
+      flash(`PDF saved to your library`);
+    },
   };
 
   // releases "new" count for the nav badge
